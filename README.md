@@ -51,6 +51,11 @@ Inspired by [EToast2](https://github.com/Blincheng/EToast2)
             params.y = toast.getYOffset();
             params.verticalMargin = toast.getVerticalMargin();
             params.horizontalMargin = toast.getHorizontalMargin();
+            if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                params.type = WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY;
+            }else {
+                params.type = WindowManager.LayoutParams.TYPE_TOAST;
+            }
             manger.addView(contentView, params);
             handler.postDelayed(new Runnable() {
                 @Override
