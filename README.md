@@ -15,6 +15,18 @@ Inspired by [EToast2](https://github.com/Blincheng/EToast2)
         private Handler handler;
         static final long SHORT_DURATION_TIMEOUT = 4000;
         static final long LONG_DURATION_TIMEOUT = 7000;
+        private static int WINDOW_TYPE = -1;
+        private static int APP_WINDOW_TYPE = new WindowManager.LayoutParams().type;
+
+        WrapperToast(){
+            if(WINDOW_TYPE == -1) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    WINDOW_TYPE = WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY;
+                } else {
+                    WINDOW_TYPE = WindowManager.LayoutParams.TYPE_TOAST;
+                }
+            }
+        }
 
         public void show(Context context, Toast toast){
             if(isNotificationEnabled(context)){
@@ -26,17 +38,15 @@ Inspired by [EToast2](https://github.com/Blincheng/EToast2)
 
         private void showInWindow(Context context, Toast toast){
             hideInWindow();
-            if(manger == null){
-                manger = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
-            }
+
+            manger = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
+
 
             if(handler == null){
                 handler = new Handler(Looper.getMainLooper());
             }
 
             contentView = toast.getView();
-          
-            //refer to android.widget.Toast.TN
             params = new WindowManager.LayoutParams();
             params.height = WindowManager.LayoutParams.WRAP_CONTENT;
             params.width = WindowManager.LayoutParams.WRAP_CONTENT;
@@ -51,12 +61,23 @@ Inspired by [EToast2](https://github.com/Blincheng/EToast2)
             params.y = toast.getYOffset();
             params.verticalMargin = toast.getVerticalMargin();
             params.horizontalMargin = toast.getHorizontalMargin();
-            if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                params.type = WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY;
-            }else {
-                params.type = WindowManager.LayoutParams.TYPE_TOAST;
+            params.type = WINDOW_TYPE;
+            try {
+                manger.addView(contentView, params);
+            }catch (Exception e){//
+                if(params.type == APP_WINDOW_TYPE){
+                    e.printStackTrace();
+                }else {//OPPO R11s Android 7.1.1
+                    WINDOW_TYPE = APP_WINDOW_TYPE;
+                    params.type = APP_WINDOW_TYPE;
+                    try {
+                        manger.addView(contentView, params);
+                    } catch (Exception e1) {
+                        e1.printStackTrace();
+                    }
+                }
             }
-            manger.addView(contentView, params);
+
             handler.postDelayed(new Runnable() {
                 @Override
                 public void run() {
